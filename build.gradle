@@ -1,0 +1,44 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.2.51"
+    id "org.jetbrains.kotlin.kapt" version "1.2.51"
+    id "com.github.johnrengelman.shadow" version "2.0.4"
+}
+
+group "de.randombyte"
+version "1.0.0"
+
+repositories {
+    jcenter()
+    maven { url = "http://maven.bluexin.be/repository/snapshots/" }
+}
+
+configurations {
+    compile.extendsFrom shadow
+}
+
+dependencies {
+    shadow "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.51"
+    shadow("be.bluexin:drpc4k:0.6-SNAPSHOT") { transitive = false }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+
+    relocate "kotlin", "de.randombyte.discordrpcmusic.shaded.kotlin"
+    relocate "be.bluexin.drpc4k.jna", "de.randombyte.discordrpcmusic.shaded.be.bluexin.drpc4k.jna"
+
+    classifier = null // Remove '-all' suffix from output file name
+}
+build.dependsOn shadowJar
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
+}
