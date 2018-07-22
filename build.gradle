@@ -5,7 +5,7 @@ plugins {
 }
 
 group "de.randombyte"
-version "1.0.0"
+version "1.0.1"
 
 repositories {
     jcenter()
@@ -18,7 +18,7 @@ configurations {
 
 dependencies {
     shadow "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.51"
-    shadow("be.bluexin:drpc4k:0.6-SNAPSHOT") { transitive = false }
+    shadow("be.bluexin:drpc4k:0.6-SNAPSHOT")
 }
 
 shadowJar {
@@ -30,6 +30,12 @@ shadowJar {
     classifier = null // Remove '-all' suffix from output file name
 }
 build.dependsOn shadowJar
+
+jar {
+    manifest {
+        attributes "Main-Class": "de.randombyte.discordrpcmusic.MainKt"
+    }
+}
 
 compileKotlin {
     kotlinOptions {
