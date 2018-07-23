@@ -11,10 +11,6 @@ private fun <T> String.execute(lines: (Sequence<String>) -> T): T =
         Runtime.getRuntime().exec(this).inputStream.bufferedReader().useLines(lines)
 
 private class TrackInfo(val title: String, val artist: String) {
-    companion object {
-        fun fromPair(pair: Pair<String, String>) = TrackInfo(title = pair.first, artist = pair.second)
-    }
-
     fun buildRichPresenceObject() = DiscordRichPresence {
         details = title
         state = artist
@@ -25,7 +21,7 @@ private class TrackInfo(val title: String, val artist: String) {
  * @return TrackInfo of the currently playing (or paused) track or null if no track or multiple ones could be found
  */
 private fun getCurrentTrackInfo(): TrackInfo? {
-    val trackInfoPair = "xprop -root".execute { lines ->
+    val trackInfo = "xprop -root".execute { lines ->
         lines
                 .filter { XPROP_WINDOW_IDS_PROPERTY_PREFIX in it }
                 .map { it.removePrefix(XPROP_WINDOW_IDS_PROPERTY_PREFIX) }
@@ -39,16 +35,17 @@ private fun getCurrentTrackInfo(): TrackInfo? {
                                 .map { it.removeSurrounding("\"") }
                                 .filter { GOOGLE_PLAY_MUSIC_CHROME_WINDOW_NAME_SUFFIX in it }
                                 .map { it.removeSuffix(GOOGLE_PLAY_MUSIC_CHROME_WINDOW_NAME_SUFFIX) }
-                                .map {
-                                    val (title, artist) = it.split(" - ", limit = 2)
-                                    Pair(title, artist)
+                                .mapNotNull innerMapNotNull@ {
+                                    val splits = it.split(" - ", limit = 2)
+                                    if (splits.size != 2) return@innerMapNotNull null
+                                    TrackInfo(title = splits[0], artist = splits[1])
                                 }.singleOrNull()
                     }
                 }
                 .singleOrNull()
     }
 
-    return trackInfoPair?.let { TrackInfo.fromPair(it) }
+    return trackInfo
 }
 
 fun main(args: Array<String>) {
